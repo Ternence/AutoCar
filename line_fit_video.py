@@ -1,8 +1,18 @@
+import string
+
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import pickle
+
+import serial
+import time
+import sys
+from picamera.array import PiRGBArray
+from picamera import PiCamera
+
+
 from combined_thresh import combined_thresh
 from perspective_transform import perspective_transform
 from Line import Line
@@ -92,6 +102,34 @@ def annotate_image(img_in):
     # Perform final visualization on top of original undistorted image
     result = final_viz(undist, left_fit, right_fit, m_inv, left_curve, right_curve, vehicle_offset)
 
+    try:
+        ser = serial.Serial('/dev/ttyUSB0', 38400, timeout=1)
+
+        start = time.clock()
+        end = time.clock()
+        print('duty cycle is %s' % (end - start))
+        start = time.clock()
+        response = ser.readline()
+
+        s_r = response
+        temp = s_r.split(":")
+        temp = temp[1].split(",")
+        power = string.atof(temp[0])
+        left_speed = string.atof(temp[1])
+        right_speed = string.atof(temp[2])
+        sonar = string.atof(temp[3].strip())
+        print('msg is %f %f %f %f' % (power, left_speed, right_speed, sonar))
+
+        # global power, radius
+        #
+        # radius = vehicle_offset * 0.5
+        ser.write('RASPI: %s, %s\n' % ('50.0', vehicle_offset))
+        sys.argv[1], sys.argv[2]
+        time.sleep(0.03)
+    except:
+        pass
+
+
     return result
 
 
@@ -105,6 +143,32 @@ def annotate_video(input_file, output_file):
 if __name__ == '__main__':
     # Annotate the video
     annotate_video('project_video1.mp4', 'out1.mp4')
+    camera = PiCamera()
+    camera.resolution = (640, 480)
+    camera.framerate = 32
+    rawCapture = PiRGBArray(camera, size=(640, 480))
+    time.sleep(0.1)
+
+    for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
+        # grab the raw NumPy array representing the image, then initialize the timestamp
+        # and occupied/unoccupied text
+        image = frame.array
+
+        # show the frame
+        cv2.imshow("Frame", image)
+
+        resultImage = annotate_image(image)
+
+        key = cv2.waitKey(1) & 0xFF
+
+        # clear the stream in preparation for the next frame
+        rawCapture.truncate(0)
+
+        # if the `q` key was pressed, break from the loop
+        if key == ord("q"):
+            break
+
+
 
 # Show example annotated image on screen for sanity check
 # img_file = 'test_images/test2.jpg'
