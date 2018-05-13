@@ -39,6 +39,8 @@ def annotate_image(img_in):
 
     # Perform polynomial fit
     print(detected)
+    # Force to Detect
+    detected = False
     if not detected:
         # Slow line fit
         ret = line_fit(binary_warped)

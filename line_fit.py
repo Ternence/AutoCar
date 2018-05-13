@@ -23,7 +23,7 @@ def line_fit(binary_warped):
     rightx_base = np.argmax(histogram[midpoint:-100]) + midpoint
 
     # Choose the number of sliding windows
-    nwindows = 9
+    nwindows = 18
     # Set height of windows
     window_height = np.int(binary_warped.shape[0] / nwindows)
     # Identify the x and y positions of all nonzero pixels in the image
@@ -90,7 +90,8 @@ def line_fit(binary_warped):
     ret['out_img'] = out_img
     ret['left_lane_inds'] = left_lane_inds
     ret['right_lane_inds'] = right_lane_inds
-
+    # plt.imshow(out_img, cmap='gray', vmin=0, vmax=1)
+    # plt.show()
     return ret
 
 
