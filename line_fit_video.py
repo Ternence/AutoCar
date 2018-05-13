@@ -3,11 +3,18 @@ import cv2
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import pickle
+import serial
+
+import time
+import string
+import sys
+
 from combined_thresh import combined_thresh
 from perspective_transform import perspective_transform
 from Line import Line
 from line_fit import line_fit, tune_fit, final_viz, calc_curve, calc_vehicle_offset
 from moviepy.editor import VideoFileClip
+
 
 # Global variables (just to make the moviepy video annotation work)
 with open('calibrate_camera.p', 'rb') as f:
@@ -20,6 +27,7 @@ right_line = Line(n=window_size)
 detected = False  # did the fast line fit detect the lines?
 left_curve, right_curve = 0., 0.  # radius of curvature for left and right lanes
 left_lane_inds, right_lane_inds = None, None  # for calculating curvature
+
 
 
 # MoviePy video annotation will call this function
@@ -94,8 +102,35 @@ def annotate_image(img_in):
     # Perform final visualization on top of original undistorted image
     result = final_viz(undist, left_fit, right_fit, m_inv, left_curve, right_curve, vehicle_offset)
 
+    control()
+
     return result
 
+
+def control():
+    try:
+        ser = serial.Serial('/dev/ttyUSB0', 38400, timeout=1)
+
+        start = time.clock()
+        end = time.clock()
+        print('duty cycle is %s' % (end - start))
+        start = time.clock()
+        response = ser.readline()
+
+        s_r = response
+        temp = s_r.split(":")
+        temp = temp[1].split(",")
+        power = string.atof(temp[0])
+        left_speed = string.atof(temp[1])
+        right_speed = string.atof(temp[2])
+        sonar = string.atof(temp[3].strip())
+        print('msg is %f %f %f %f' % (power, left_speed, right_speed, sonar))
+
+        ser.write('RASPI:0.0,0.0\n')  # %('50.0', '20.0'));
+        sys.argv[1], sys.argv[2]
+        # time.sleep(0.03)
+    except:
+        pass
 
 def annotate_video(input_file, output_file):
     """ Given input_file video, save annotated video to output_file """
