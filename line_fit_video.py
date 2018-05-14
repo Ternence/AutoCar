@@ -12,6 +12,7 @@ import sys
 from picamera.array import PiRGBArray
 from picamera import PiCamera
 
+from car import*
 
 from combined_thresh import combined_thresh
 from perspective_transform import perspective_transform
@@ -99,38 +100,37 @@ def annotate_image(img_in):
 
     vehicle_offset = calc_vehicle_offset(undist, left_fit, right_fit)
 
+    distance = get_distance()
+    set_speed(TURN_LEFT,)
+    set_turn()
+
     # Perform final visualization on top of original undistorted image
     result = final_viz(undist, left_fit, right_fit, m_inv, left_curve, right_curve, vehicle_offset)
 
-    try:
-        ser = serial.Serial('/dev/ttyUSB0', 38400, timeout=1)
-
-        start = time.clock()
-        end = time.clock()
-        print('duty cycle is %s' % (end - start))
-        start = time.clock()
-        response = ser.readline()
-
-        s_r = response
-        temp = s_r.split(":")
-        temp = temp[1].split(",")
-        power = string.atof(temp[0])
-        left_speed = string.atof(temp[1])
-        right_speed = string.atof(temp[2])
-        sonar = string.atof(temp[3].strip())
-        print('msg is %f %f %f %f' % (power, left_speed, right_speed, sonar))
-
-        # global power, radius
-        #
-        # radius = vehicle_offset * 0.5
-        ser.write('RASPI: %s, %s\n' % ('50.0', vehicle_offset))
-        sys.argv[1], sys.argv[2]
-        time.sleep(0.03)
-    except:
-        pass
-
-
     return result
+
+#
+# def commonControl(vehicle_offset):
+#     ser = serial.Serial('/dev/ttyUSB0', 38400, timeout=1)
+#     start = time.clock()
+#     end = time.clock()
+#     print('duty cycle is %s' % (end - start))
+#     start = time.clock()
+#     response = ser.readline()
+#     s_r = response
+#     temp = s_r.split(":")
+#     temp = temp[1].split(",")
+#     power = string.atof(temp[0])
+#     left_speed = string.atof(temp[1])
+#     right_speed = string.atof(temp[2])
+#     sonar = string.atof(temp[3].strip())
+#     print('msg is %f %f %f %f' % (power, left_speed, right_speed, sonar))
+#     # global power, radius
+#     #
+#     # radius = vehicle_offset * 0.5
+#     ser.write('RASPI: %s, %s\n' % ('50.0', vehicle_offset))
+#     sys.argv[1], sys.argv[2]
+#     time.sleep(0.03)
 
 
 def annotate_video(input_file, output_file):
@@ -142,7 +142,7 @@ def annotate_video(input_file, output_file):
 
 if __name__ == '__main__':
     # Annotate the video
-    annotate_video('project_video1.mp4', 'out1.mp4')
+    # annotate_video('project_video1.mp4', 'out1.mp4')
     camera = PiCamera()
     camera.resolution = (640, 480)
     camera.framerate = 32
