@@ -3,9 +3,6 @@ from math import *
 from matrix import *
 import random
 
-from car.control import robot
-
-
 def next_move(hunter_position, hunter_heading, target_measurement, max_distance, OTHER = None):
     # This function will be called after each time the target moves. 
 
@@ -153,7 +150,7 @@ def demo_grading(hunter_bot, target_bot, next_move_fcn, OTHER = None):
         target_position = (target_bot.x, target_bot.y)
         separation = distance_between(hunter_position, target_position)
         if separation < separation_tolerance:
-            print("You got it right! It took you ", ctr, " steps to catch the target.")
+            print "You got it right! It took you ", ctr, " steps to catch the target."
             caught = True
 
         # The target broadcasts its noisy measurement
@@ -174,7 +171,7 @@ def demo_grading(hunter_bot, target_bot, next_move_fcn, OTHER = None):
 
         ctr += 1            
         if ctr >= 1000:
-            print("It took too many steps to catch the target.")
+            print "It took too many steps to catch the target."
     return caught
 
 def demo_grading_vis(hunter_bot, target_bot, next_move_fcn, OTHER = None):
@@ -224,7 +221,7 @@ def demo_grading_vis(hunter_bot, target_bot, next_move_fcn, OTHER = None):
         target_position = (target_bot.x, target_bot.y)
         separation = distance_between(hunter_position, target_position)
         if separation < separation_tolerance:
-            print("You got it right! It took you ", ctr, " steps to catch the target.")
+            print "You got it right! It took you ", ctr, " steps to catch the target."
             caught = True
 
         # The target broadcasts its noisy measurement
@@ -253,7 +250,7 @@ def demo_grading_vis(hunter_bot, target_bot, next_move_fcn, OTHER = None):
         #End of visualization
         ctr += 1            
         if ctr >= 1000:
-            print("It took too many steps to catch the target.")
+            print "It took too many steps to catch the target."
     return caught
 
 def angle_trunc(a):
@@ -298,5 +295,4 @@ target.set_noise(0.0, 0.0, measurement_noise)
 
 hunter = robot(-10.0, -10.0, 0.0)
 
-grading_vis = demo_grading_vis(hunter, target, next_move)
-print(grading_vis)
+print demo_grading_vis(hunter, target, next_move)
