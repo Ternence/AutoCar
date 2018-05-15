@@ -1,6 +1,8 @@
 import string
 
 import numpy as np
+import threading
+
 import cv2
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -19,7 +21,9 @@ from line_fit import line_fit, tune_fit, final_viz, calc_curve, calc_vehicle_off
 from moviepy.editor import VideoFileClip
 
 ser = serial.Serial('/dev/ttyUSB0', 38400, timeout=1)
-
+start = time.clock()
+speed = 50.0
+radius = 20.0
 # Global variables (just to make the moviepy video annotation work)
 # with open('calibrate_camera.p', 'rb') as f:
 #     save_dict = pickle.load(f)
@@ -111,72 +115,73 @@ def annotate_image(img_in):
 
     return result
 
+def run():
+    global start
+    try:
+        while 1:
+            end = time.clock()
+            print('duty cycle is %s' % (end - start))
+            start = time.clock()
+            response = ser.readline()
+            try:
+                s_r = response
+                temp = s_r.split(":")
+                # print temp
+                temp = temp[1].split(",")
+                # print temp
+                power = string.atof(temp[0])
+                left_speed = string.atof(temp[1])
+                right_speed = string.atof(temp[2])
+                sonar = string.atof(temp[3].strip())
+                print ('msg is %f %f %f %f' % (power, left_speed, right_speed, sonar))
+                ser.write('RASPI:%s,%s\n' % (str(speed), str(radius)));
+                print('RASPI:%s,%s\n' % (str(speed), str(radius)))
+                print(sys.argv[1], sys.argv[2])
+                time.sleep(0.03);
+            except:
+                print(response)
+                # print n
 
-def commonControl(vehicle_offset):
-    start = time.clock()
-    end = time.clock()
-    print('duty cycle is %s' % (end - start))
-    start = time.clock()
-    response = ser.readline()
-    s_r = response
-    temp = s_r.split(":")
-    temp = temp[1].split(",")
-    power = string.atof(temp[0])
-    left_speed = string.atof(temp[1])
-    right_speed = string.atof(temp[2])
-    sonar = string.atof(temp[3].strip())
-    print('msg is %f %f %f %f' % (power, left_speed, right_speed, sonar))
-    # global power, radius
-    #
-    # radius = vehicle_offset * 0.5
-    # ser.write('RASPI: %s, %s\n' % ('50.0', vehicle_offset))
-    ser.write('RASPI: 10.0, 10.0\n')
-    sys.argv[1], sys.argv[2]
-    time.sleep(0.03)
+    except KeyboardInterrupt:
+        ser.close()
 
 
-def annotate_video(input_file, output_file):
-    """ Given input_file video, save annotated video to output_file """
-    video = VideoFileClip(input_file)
-    annotated_video = video.fl_image(annotate_image)
-    annotated_video.write_videofile(output_file, audio=False)
+
+
+def capture():
+    speed = 60.0
+    with PiCamera() as camera:
+        camera.resolution = (1280, 720)
+        camera.framerate = 32
+        rawCapture = PiRGBArray(camera, size=(1280, 720))
+        time.sleep(0.1)
+
+        for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
+            # grab the raw NumPy array representing the image, then initialize the timestamp
+            # and occupied/unoccupied text
+
+            img_in = frame.array
+
+            cv2.imshow("Frame", img_in)
+
+            annotate_image(img_in)
+
+            key = cv2.waitKey(1) & 0xFF
+
+            # clear the stream in preparation for the next frame
+            rawCapture.truncate(0)
+
+            # if the `q` key was pressed, break from the loop
+            if key == ord("q"):
+                break
 
 
 if __name__ == '__main__':
-    # Annotate the video
-    # annotate_video('project_video1.mp4', 'out1.mp4')
-    camera = PiCamera()
-    camera.resolution = (1280, 720)
-    camera.framerate = 32
-    rawCapture = PiRGBArray(camera, size=(1280, 720))
-    time.sleep(0.1)
-
-    for frame in camera.capture_continuous(rawCapture, format="jpeg", use_video_port=True):
-        # grab the raw NumPy array representing the image, then initialize the timestamp
-        # and occupied/unoccupied text
-
-        img_in = frame.array
-        # cv2.imshow("Frame", img_in)
-        # show the frame
-
-        try:
-            annotate_image(img_in)
-        except:
-            pass
-
-        commonControl(10.0)
-
-        key = cv2.waitKey(1) & 0xFF
-
-        # clear the stream in preparation for the next frame
-        rawCapture.truncate(0)
-
-        # if the `q` key was pressed, break from the loop
-        if key == ord("q"):
-            break
-
-
-
+    t1 = threading.Thread(target=capture(), args=(5,))
+    # t2 = threading.Thread(target=run(), args=(8,))
+    t1.start()
+    # t2.start()
+    # capture()
 # Show example annotated image on screen for sanity check
 # img_file = 'test_images/test2.jpg'
 # img = mpimg.imread(img_file)
