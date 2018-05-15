@@ -151,7 +151,7 @@ if __name__ == '__main__':
     rawCapture = PiRGBArray(camera, size=(1280, 720))
     time.sleep(0.1)
 
-    for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
+    for frame in camera.capture_continuous(rawCapture, format="jpeg", use_video_port=True):
         # grab the raw NumPy array representing the image, then initialize the timestamp
         # and occupied/unoccupied text
 
